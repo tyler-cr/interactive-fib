@@ -6,19 +6,32 @@
 
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec2 vPosition;
+attribute vec3 vColor;
+varying vec4 color;
+
 void main(){
+    float angle = 3.14159/2.0;
+    float dist = sqrt(vPosition.x * vPosition.x + vPosition.y * vPosition.y);
+    float s = sin( angle*dist);
+    float c = cos( angle*dist);
 
     gl_Position = vec4(vPosition, 0.0, 1.0);
-
+    color = vec4(vColor, 1.0);
 }
 </script>
+
+
 <script id="fragment-shader" type="x-shader/x-fragment">
 precision mediump float;
+varying vec4 color;
+
 
 void main() {
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    gl_FragColor = color;
 }
 </script>
+
+
 <script type="text/javascript" src="../Common/webgl-utils.js"></script>
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="../Common/MV.js"></script>
