@@ -49,11 +49,16 @@ body
 </head>
 
 <body>
+
 <h1>Interactive Fibonacci Spiral</h1>
-<p>
-    As mouse goes left to right, more circles appear.
-    As mouse goes bottom to top, the colors change.
-</p>
+
+<select id="mode">
+  <option value="squares-outline">Squares-outline</option>
+  <option value="squares-filled">Squares-filled</option>
+  <option value="diagonal">Diagonal</option>
+  <option value="curved">Curved</option>
+</select> <br>
+
 
 <canvas id="gl-canvas" width="500" height="500" style="border:2px solid #000000;">
     If you're seeing this than the HTML5 canvas element is either
