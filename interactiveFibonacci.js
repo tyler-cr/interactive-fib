@@ -2,7 +2,7 @@ var canvas;
 var gl;
 let vertices;
 let draw;
-let mode = 1;
+let mode = 2;
 let colors;
 let size = 9;
 let positionBuffer;
@@ -58,7 +58,7 @@ function makeColorsFromVertices(verts){
 function makeFilledColorsFromVertices(verts){
     let colors = [];
 
-    for (let i = 0; i < verts.length; i += 6){
+    for (let i = 0; i < verts.length/4; i ++){
         const r = Math.random();
         const g = Math.random();
         const b = Math.random();
@@ -396,7 +396,7 @@ function drawSquareOutlines(){
 
 function drawSquareFilled(){
 
-    for (let i = 0; i < vertices.length/4; i++){
+    for (let i = 0; i < size; i++){
         let tri1 = 4*(i-1);
         let tri2 = tri1 + 1;        
         gl.drawArrays(gl.TRIANGLES, tri1, 3);
