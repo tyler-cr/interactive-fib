@@ -10,11 +10,6 @@ attribute vec3 vColor;
 varying vec4 color;
 
 void main(){
-    float angle = 3.14159/2.0;
-    float dist = sqrt(vPosition.x * vPosition.x + vPosition.y * vPosition.y);
-    float s = sin( angle*dist);
-    float c = cos( angle*dist);
-
     gl_Position = vec4(vPosition, 0.0, 1.0);
     color = vec4(vColor, 1.0);
 }
@@ -46,6 +41,9 @@ body
     line-height: 1.25em;
 }
 </style>
+
+<link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
@@ -59,11 +57,14 @@ body
   <option value="curved">Curved</option>
 </select> <br>
 
+<div id="canvas-wrap">
+    <canvas id="gl-canvas" width="500" height="500" style="border:2px solid #000000;">
+        If you're seeing this than the HTML5 canvas element is either
+        broken or your browser doesn't support it. RIP
+    </canvas>
+  <div id="resize-handle"></div>
+</div>
 
-<canvas id="gl-canvas" width="500" height="500" style="border:2px solid #000000;">
-    If you're seeing this than the HTML5 canvas element is either
-    broken or your browser doesn't support it. RIP
-</canvas>
 </body>
 
 </html>

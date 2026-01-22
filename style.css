@@ -1,0 +1,16 @@
+#canvas-wrap{
+  position: relative;
+  display: inline-block;
+}
+
+#resize-handle{
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  background: #222;
+  border: 2px solid #fff;
+  box-sizing: border-box;
+}
