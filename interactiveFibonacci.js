@@ -1,12 +1,37 @@
 var canvas;
 var gl;
-var justOne = 0;
+let vertices;
+let draw;
+let mode = 2;
+let colors;
+let size = 9;
+let positionBuffer;
+let colorBuffer;
 
-//let vertices = generateDiagonal()
-//let vertices = generateSquareOutline()
-let vertices = generateSquareFilled()
-//let vertices = generateCurve()
-
+function decideGeneration(mode = 3){
+    
+    if (mode === 0){
+        vertices =  generateDiagonal(size);
+        colors = makeColorsFromVertices(vertices);
+        draw = drawDiagonals;
+    }
+    else if (mode === 1){
+        vertices = generateSquareOutline(size);
+        colors = makeColorsFromVertices(vertices);
+        draw = drawSquareOutlines;
+    }
+    else if (mode === 2){
+        vertices = generateSquareFilled(size);
+        colors = makeFilledColorsFromVertices(vertices);
+        draw = drawSquareFilled
+    }
+    else {
+        vertices = generateCurve(8, size);
+        colors = makeColorsFromVertices(vertices);
+        draw = drawSpiral
+        
+    }
+}
 
 
 function generateFibArray(size){
@@ -33,12 +58,12 @@ function makeColorsFromVertices(verts){
 function makeFilledColorsFromVertices(verts){
     let colors = [];
 
-    for (let i = 0; i < verts.length; i += 6){
+    for (let i = 0; i < verts.length/4; i ++){
         const r = Math.random();
         const g = Math.random();
         const b = Math.random();
     
-        for (let j = 0; j < 6; j++){
+        for (let j = 0; j < 4; j++){
             colors.push(vec3(r,g,b));
         }
 
@@ -71,7 +96,6 @@ function generateDiagonal(size = 11){
     let lastY = -1;
     let fibArray = normalizeArray(generateFibArray(size));
 
-    console.log("attempting to generate diagonals...")
     let direction = 0;
     for (let i = 0; i < fibArray.length; i++){
         if(direction == 0){
@@ -202,24 +226,74 @@ function generateSquareFilled(size = 11){
             lastY += fibArray[i];
         }
         mode = (mode+1)%4;
-        vertices.push(...[bl, br, tr, bl, tr, tl]);
+        vertices.push(...[tl, tr, bl, br]);
     }
 
     vertices = stetchToFitFib(vertices);
     return vertices;
 }
 
-function generateCurve(depth = 8){
+function generateCurve(depth = 8, size = 11){
+    let vertices = [];
+    let fibArray = normalizeArray(generateFibArray(size));
+    let lastX = -1+fibArray[0];
+    let lastY = -1;
+    let mode = 0; //0 is bl, 1 is tl, 2 is tr, 3 is br
+    
+    for (let i = 0; i < fibArray.length-1; i++){
+        vertices.push(...createQuarterCicle(depth, [lastX, lastY], mode, fibArray[i]));
+        if (mode === 0){
+            lastY = lastY+fibArray[i]-fibArray[i+1];
+        }
+        else if (mode === 1){
+            lastX = lastX+fibArray[i]-fibArray[i+1];
+        }
+        else if (mode === 2){
+            lastY -= fibArray[i]-fibArray[i+1];
+        }
+        else{
+            lastX -= fibArray[i]-fibArray[i+1];
+        }
+        mode = (mode+1)%4;
+    }
 
+    vertices = stetchToFitFib(vertices);
+    return vertices;
 }
 
-function filledStretch(vecarray){
-    let x_max = -Infinity;
-    let y_max = -Infinity;
+function createQuarterCicle(depth = 8,center = [0, 0], mode = 0, radius = 1){
+    let vertices = []
+    let modeMulX;
+    let modeMulY;
+    
+    const quarter = Math.PI / 2;
+    const ratio = 1/depth;
+
+    if (mode === 0){
+        modeMulX = -1;
+        modeMulY = 1;
+    }
+    else if (mode === 1){
+        modeMulX = 1;
+        modeMulY = 1;
+    }
+    else if (mode === 2){
+        modeMulX = 1;
+        modeMulY = -1;
+    }
+    else{
+        modeMulX = -1;
+        modeMulY = -1;
+    }
+
+    for (let i = 0; i <= depth; i++){
+        vertices.push(vec2(radius*modeMulX*Math.cos(quarter*ratio*i)+center[0], radius*modeMulY*Math.sin(quarter*ratio*i)+center[1]));
+    }
+
+    return vertices;
 }
 
-//I'm confident there is in fact a more mathematical / less hacky way to go about this. But I'm a computer scientist as
-//much as I am a math teacher.
+//I'm confident there is in fact a more mathematical / less hacky way to go about this
 function stetchToFitFib(vecarray){
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
 
@@ -253,6 +327,9 @@ function stetchToFitFib(vecarray){
 
 window.onload = function init()
 {
+
+    decideGeneration(mode); 
+
     canvas = document.getElementById("gl-canvas");
     gl = WebGLUtils.setupWebGL(canvas);
     gl.viewport(0,0,canvas.width, canvas.height);
@@ -261,7 +338,7 @@ window.onload = function init()
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
-    var positionBuffer = gl.createBuffer();
+    positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices), gl.STATIC_DRAW);
 
@@ -269,10 +346,7 @@ window.onload = function init()
     gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
-    //var colors = makeColorsFromVertices(vertices);
-    var colors = makeFilledColorsFromVertices(vertices); //for filled squares
-
-    var colorBuffer = gl.createBuffer();
+    colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
 
@@ -280,18 +354,34 @@ window.onload = function init()
     gl.vertexAttribPointer(vColor, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vColor);
 
-    for (let i = 0; i < vertices.length; i++){
-        console.log(`${vertices[i][0]} : ${vertices[i][1]}`);
-    }
+    document.getElementById("mode").addEventListener("change", (e) => {
+        const v = e.target.value;
+
+        if (v === "diagonal") mode = 0;
+        else if (v === "squares-outline") mode = 1;
+        else if (v === "squares-filled") mode = 2;
+        else mode = 3;
+
+        decideGeneration(mode);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices), gl.STATIC_DRAW);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
+
+        render();
+    });
+
+    enableCanvasResize();
+
 
     render();
 }
 
 function render() {
-
     gl.clear( gl.COLOR_BUFFER_BIT );
-    //drawDiagonals();
-    drawSquareFilled();
+    draw();
 }
 
 function drawDiagonals(){
@@ -299,13 +389,83 @@ function drawDiagonals(){
 }
 
 function drawSquareOutlines(){
-    
     for (let i = 0; i < vertices.length; i += 4) {
         gl.drawArrays(gl.LINE_LOOP, i, 4);
     }
-
 }
 
 function drawSquareFilled(){
-    gl.drawArrays(gl.TRIANGLES, 0, vertices.length);
+
+    for (let i = 0; i < size; i++){
+        let tri1 = 4*(i-1);
+        let tri2 = tri1 + 1;        
+        gl.drawArrays(gl.TRIANGLES, tri1, 3);
+        gl.drawArrays(gl.TRIANGLES, tri2, 3);
+    }
+}
+
+function drawSpiral(depth = 8){
+    const arcLen = depth + 1;
+    for (let i = 0; i < vertices.length; i += arcLen){
+        gl.drawArrays(gl.LINE_STRIP, i, arcLen);
+    }
+}
+
+function enableCanvasResize() {
+  const wrap = document.getElementById("canvas-wrap");
+  const canvas = document.getElementById("gl-canvas");
+  const handle = document.getElementById("resize-handle");
+
+  let dragging = false;
+  let startX = 0;
+  let startY = 0;
+  let startW = 0;
+  let startH = 0;
+
+  const minW = 150;
+  const minH = 150;
+
+  function setCanvasSize(w, h) {
+    w = Math.max(minW, Math.floor(w));
+    h = Math.max(minH, Math.floor(h));
+
+    canvas.width = Math.floor(w);
+    canvas.height = Math.floor(h);
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    render();
+  }
+
+  handle.addEventListener("pointerdown", (e) => {
+    dragging = true;
+    handle.setPointerCapture(e.pointerId);
+
+    const rect = wrap.getBoundingClientRect();
+    startX = e.clientX;
+    startY = e.clientY;
+    startW = rect.width;
+    startH = rect.height;
+
+   e.preventDefault(); // prevent unintended behavior
+  });
+
+  handle.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    setCanvasSize(startW + dx, startH + dy);
+  });
+
+  handle.addEventListener("pointerup", (e) => {
+    dragging = false;
+    try {
+      handle.releasePointerCapture(e.pointerId);
+    } catch (_) {}
+  });
+
+  //get info of new size and share it to canvas
+  const rect = wrap.getBoundingClientRect();
+  setCanvasSize(rect.width, rect.height);
 }
