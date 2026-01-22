@@ -2,7 +2,7 @@ var canvas;
 var gl;
 let vertices;
 let draw;
-let mode = 2;
+let mode = 1;
 let colors;
 let size = 9;
 let positionBuffer;
