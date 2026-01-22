@@ -3,8 +3,8 @@ var gl;
 var justOne = 0;
 
 //let vertices = generateDiagonal()
-let vertices = generateSquareOutline()
-//let vertices = generateSquareFilled()
+//let vertices = generateSquareOutline()
+let vertices = generateSquareFilled()
 //let vertices = generateCurve()
 
 
@@ -269,8 +269,8 @@ window.onload = function init()
     gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
-    var colors = makeColorsFromVertices(vertices);
-    //var colors = makeFilledColorsFromVertices(vertices); //for filled squares
+    //var colors = makeColorsFromVertices(vertices);
+    var colors = makeFilledColorsFromVertices(vertices); //for filled squares
 
     var colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
@@ -291,7 +291,7 @@ function render() {
 
     gl.clear( gl.COLOR_BUFFER_BIT );
     //drawDiagonals();
-    drawSquareOutlines();
+    drawSquareFilled();
 }
 
 function drawDiagonals(){
